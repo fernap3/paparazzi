@@ -1,7 +1,7 @@
 {
-  "name": "html-to-image",
+  "name": "puppeteer-http",
   "version": "1.0.0",
-  "description": "",
+  "description": "An HTTP wrapper around Puppeteer, allowing it to be controlled as a web service",
   "main": "main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
