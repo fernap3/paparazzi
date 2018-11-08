@@ -38,20 +38,34 @@ async function startServer()
 
 
 
-	// app.get('/stationstatus', async (req, res, next) => {
-		
-	// 	//res.status(200).json();
-	// });
+	app.get('/', async (req, res, next) =>
+	{
+		const html = req.body.html;
+		if (!html)
+		{
+			res.status(400).json({
+				error: "html not specified in request body"
+			} as ConvertErrorResponse);
 
-	for (let i = 0; i < 10; i++)
-		await rasterizer.convert("hithere");
-	
-	rasterizer.dispose();
+			return;
+		}
+
+		const imageBuffer = await rasterizer.convert(html);
+
+		res.writeHead(200, {
+			"Content-Type": "image/png",
+			"Content-disposition": `attachment;filename=export.png`,
+			"Content-Length": imageBuffer.length
+		});
+
+		res.end(imageBuffer);
+	});
 
 
-	// app.listen(process.env.PORT || 5000, () => {
-	// 	console.log("plugnomad server listening on port " + process.env.PORT || 5000);
-	// });
+
+	app.listen(process.env.PORT || 5000, () => {
+		console.log("plugnomad server listening on port " + process.env.PORT || 5000);
+	});
 }
 
 function checkForEnvVars(...varNames: string[]): boolean
@@ -73,3 +87,7 @@ function checkForEnvVars(...varNames: string[]): boolean
 	return true;
 }
 
+interface ConvertErrorResponse
+{
+	error: string;
+}

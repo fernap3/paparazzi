@@ -19,15 +19,17 @@ export async function dispose()
 	await browser.close();
 }
 
-export async function convert(html: string)
+export async function convert(html: string): Promise<Buffer>
 {
 	await page.setContent(html);
-	console.time("getting image");
+	console.time("screenshotting");
 	const imageBuffer = await page.screenshot({
 		type: "png",
 		encoding: "binary",
-		clip: {x: 0, y: 0, width: 10, height: 10},
-		path: `./${utils.guid()}.png`
+		//clip: {x: 0, y: 0, width: 10, height: 10},
+		//path: `./${utils.guid()}.png`
 	});
-	console.timeEnd("getting image");
+	console.timeEnd("screenshotting");
+
+	return imageBuffer;
 }
