@@ -34,23 +34,25 @@ async function startServer()
 	app.use(bodyParser.urlencoded({
 		extended: false
 	}));
-	app.use(bodyParser.json());
+	app.use(bodyParser.json({limit: "50mb"}));
 
 
 
-	app.get('/', async (req, res, next) =>
+	app.post('/', async (req, res, next) =>
 	{
 		const html = req.body.html;
-		if (!html)
+		const height = req.body.height;
+		const width = req.body.width;
+		if (!html || !height || !width)
 		{
 			res.status(400).json({
-				error: "html not specified in request body"
+				error: "Request body must have the following schema: { html: string, height: number, width: number }"
 			} as ConvertErrorResponse);
 
 			return;
 		}
 
-		const imageBuffer = await rasterizer.convert(html);
+		const imageBuffer = await rasterizer.convert(html, height, width);
 
 		res.writeHead(200, {
 			"Content-Type": "image/png",
