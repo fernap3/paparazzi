@@ -1,7 +1,6 @@
 import * as dotenv from "dotenv";
 dotenv.config();
 
-import * as path from "path";
 import * as express from "express";
 import * as bodyParser from "body-parser";
 import * as rasterizer from "./rasterizer";
@@ -18,12 +17,9 @@ process.on("SIGTERM", async (errCode) => {
 if (!checkForEnvVars("PORT"))
 	process.exit(-1);
 
-console.log("Starting puppeteer...");
-rasterizer.init().then(async () => {
-	
-	startServer();
-});
 
+
+startServer();
 
 async function startServer()
 {
@@ -36,23 +32,41 @@ async function startServer()
 	}));
 	app.use(bodyParser.json({limit: "50mb"}));
 
-
-
-	app.post('/', async (req, res, next) =>
+	app.post("/", async (req, res, next) =>
 	{
 		const html = req.body.html;
-		const height = req.body.height;
-		const width = req.body.width;
-		if (!html || !height || !width)
+		
+		if (!html)
 		{
 			res.status(400).json({
-				error: "Request body must have the following schema: { html: string, height: number, width: number }"
+				error: "Request body must have the following schema: { html: string }"
 			} as ConvertErrorResponse);
 
 			return;
 		}
 
-		const imageBuffer = await rasterizer.convert(html, height, width);
+		console.log("Starting puppeteer...");
+		await rasterizer.init(html);
+
+		res.status(200).send();
+	});
+
+	app.post("/image", async (req, res, next) =>
+	{
+		const updateFunction = req.body.updateFunction;
+		const updateData = req.body.updateData;
+		const height = req.body.height;
+		const width = req.body.width;
+		if (!updateFunction || !updateData || !height || !width)
+		{
+			res.status(400).json({
+				error: "Request body must have the following schema: { updateFunction: string, updateData: any, height: number, width: number }"
+			} as ConvertErrorResponse);
+
+			return;
+		}
+
+		const imageBuffer = await rasterizer.screenshot(updateFunction, updateData, height, width);
 
 		res.writeHead(200, {
 			"Content-Type": "image/png",
@@ -62,7 +76,6 @@ async function startServer()
 
 		res.end(imageBuffer);
 	});
-
 
 
 	app.listen(process.env.PORT || 5000, () => {
