@@ -3,7 +3,7 @@ dotenv.config();
 
 import * as express from "express";
 import * as bodyParser from "body-parser";
-import * as rasterizer from "./rasterizer";
+import * as rasterizerPool from "./rasterizer-pool";
 
 // Let the process crash on unhandled promises
 process.on("unhandledRejection", err => { throw err; });
@@ -17,12 +17,13 @@ process.on("SIGTERM", async (errCode) => {
 if (!checkForEnvVars("PORT"))
 	process.exit(-1);
 
-
-
 startServer();
 
 async function startServer()
 {
+	console.log("Starting puppeteer pool");
+	await rasterizerPool.init();
+	
 	const app = express();
 	
 	app.disable("etag"); // Disable 304 responses
@@ -32,7 +33,7 @@ async function startServer()
 	}));
 	app.use(bodyParser.json({limit: "50mb"}));
 
-	app.post("/", async (req, res, next) =>
+	app.post("/html", async (req, res, next) =>
 	{
 		const html = req.body.html;
 		
@@ -45,8 +46,7 @@ async function startServer()
 			return;
 		}
 
-		console.log("Starting puppeteer...");
-		await rasterizer.init(html);
+		await rasterizerPool.setHtml(html);
 
 		res.status(200).send();
 	});
@@ -66,7 +66,7 @@ async function startServer()
 			return;
 		}
 
-		const imageBuffer = await rasterizer.screenshot(updateFunction, updateData, height, width);
+		const imageBuffer = await rasterizerPool.screenshot(updateFunction, updateData, height, width);
 
 		res.writeHead(200, {
 			"Content-Type": "image/png",

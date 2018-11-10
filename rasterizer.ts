@@ -1,51 +1,61 @@
 import * as puppeteer from "puppeteer";
 import * as utils from "./utils";
 
-let browser: puppeteer.Browser;
-let page: puppeteer.Page;
-
-export async function init(html: string)
+export default class Rasterizer
 {
-	if (browser)
-		throw "Puppeteer already initialized";
+	private browser: puppeteer.Browser;
+	private page: puppeteer.Page;
 	
-	browser = await puppeteer.launch({
-		headless: true
-	});
+	constructor()
+	{
+	}
 
-	page = await browser.newPage();
-	page.setViewport({width: 800, height: 600});
-
-	await page.setContent(html);
-}
-
-export async function dispose()
-{
-	await browser.close();
-}
-
-export async function screenshot(updateFunction: string, updateData: any, cropHeight: number, cropWidth: number): Promise<Buffer>
-{
-	console.time("runscript");
-
-	await page.evaluate((updateFunction, updateData) => {
-		if (typeof window[updateFunction] !== "function")
-			throw "updateFunction must be the name of a function in window";
+	public async init()
+	{
+		if (this.browser)
+			throw "This Rasterizer instance has already been initialized";
 		
-		window[updateFunction](updateData);
-	}, updateFunction, updateData);
+		this.browser = await puppeteer.launch({
+			headless: true
+		});
 
-	console.timeEnd("runscript");
-	
-	
-	console.time("screenshotting");
-	const imageBuffer = await page.screenshot({
-		type: "png",
-		encoding: "binary",
-		clip: { x: 0, y: 0, width: cropWidth, height: cropHeight },
-		//path: `./${utils.guid()}.png`
-	});
-	console.timeEnd("screenshotting");
+		this.page = await this.browser.newPage();
+		await this.page.setViewport({width: 800, height: 600});
+	}
 
-	return imageBuffer;
+	public async setHtml(html: string)
+	{
+		await this.page.setContent(html);
+	}
+
+	public async dispose()
+	{
+		await this.browser.close();
+	}
+
+	public async screenshot(updateFunction: string, updateData: any, cropHeight: number, cropWidth: number): Promise<Buffer>
+	{
+		console.time("runscript");
+
+		await this.page.evaluate((updateFunction, updateData) => {
+			if (typeof window[updateFunction] !== "function")
+				throw "updateFunction must be the name of a function in window";
+			
+			window[updateFunction](updateData);
+		}, updateFunction, updateData);
+
+		console.timeEnd("runscript");
+		
+		
+		console.time("screenshotting");
+		const imageBuffer = await this.page.screenshot({
+			type: "png",
+			encoding: "binary",
+			clip: { x: 0, y: 0, width: cropWidth, height: cropHeight },
+			//path: `./${utils.guid()}.png`
+		});
+		console.timeEnd("screenshotting");
+
+		return imageBuffer;
+	}
 }
