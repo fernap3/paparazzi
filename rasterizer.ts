@@ -41,7 +41,7 @@ export default class Rasterizer
 			if (typeof window[updateFunction] !== "function")
 				throw "updateFunction must be the name of a function in window";
 			
-			window[updateFunction](updateData);
+			return window[updateFunction](updateData);
 		}, updateFunction, updateData);
 
 		console.timeEnd("runscript");
