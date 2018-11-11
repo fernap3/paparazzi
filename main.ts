@@ -4,7 +4,7 @@ dotenv.config();
 import * as express from "express";
 import * as bodyParser from "body-parser";
 import Rasterizer from "./rasterizer";
-import RasterizerPool from "./rasterizer-pool";
+import RasterizerPool from "./pool";
 
 // Let the process crash on unhandled promises
 process.on("unhandledRejection", err => { throw err; });
