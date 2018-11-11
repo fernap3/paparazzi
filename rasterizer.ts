@@ -16,7 +16,7 @@ export default class Rasterizer
 			throw "This Rasterizer instance has already been initialized";
 		
 		this.browser = await puppeteer.launch({
-			headless: false
+			headless: true
 		});
 
 		this.page = await this.browser.newPage();
