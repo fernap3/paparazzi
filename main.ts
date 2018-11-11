@@ -24,9 +24,14 @@ startServer();
 
 async function startServer()
 {
-	console.log("Starting puppeteer pool");
+	const poolSize = parseInt(process.env.POOL_SIZE);
 
-	for (let i = 0; i < parseInt(process.env.POOL_SIZE); i++)
+	if (isNaN(poolSize) || poolSize <= 0)
+		throw "POOL_SIZE env variable must be > 0";
+
+	console.log(`Starting ${poolSize} Puppeteer instance${poolSize > 1 ? "S" : ""}`);
+
+	for (let i = 0; i < poolSize; i++)
 	{
 		const r = new Rasterizer();
 		await r.init();
