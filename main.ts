@@ -46,7 +46,14 @@ async function startServer()
 			return;
 		}
 
-		await rasterizerPool.setHtml(html);
+		const r = await rasterizerPool.reserve();
+
+		try {
+			await r.setHtml(html);
+		}
+		finally	{
+			rasterizerPool.release(r);
+		}
 
 		res.status(200).send();
 	});
@@ -66,7 +73,14 @@ async function startServer()
 			return;
 		}
 
-		const imageBuffer = await rasterizerPool.screenshot(updateFunction, updateData, height, width);
+		const r = await rasterizerPool.reserve();
+		let imageBuffer: Buffer;
+		try {
+			imageBuffer = await r.screenshot(updateFunction, updateData, height, width);
+		}
+		finally	{
+			rasterizerPool.release(r);
+		}
 
 		res.writeHead(200, {
 			"Content-Type": "image/png",
