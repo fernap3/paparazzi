@@ -29,7 +29,7 @@ async function startServer()
 	if (isNaN(poolSize) || poolSize <= 0)
 		throw "POOL_SIZE env variable must be > 0";
 
-	console.log(`Starting ${poolSize} Puppeteer instance${poolSize > 1 ? "S" : ""}`);
+	console.log(`Starting ${poolSize} Puppeteer instance${poolSize > 1 ? "s" : ""}`);
 
 	for (let i = 0; i < poolSize; i++)
 	{
@@ -60,14 +60,8 @@ async function startServer()
 			return;
 		}
 
-		const r = await pool.reserve();
-
-		try {
+		for (let r of pool.all())
 			await r.setHtml(html);
-		}
-		finally	{
-			pool.release(r);
-		}
 
 		res.status(200).send();
 	});

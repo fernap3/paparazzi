@@ -8,10 +8,10 @@ export default class Pool<T>
 	{
 		if (this.availablePool.size)
 		{
-			const T = [...this.availablePool][0];
-			this.availablePool.delete(T);
-			this.inUsePool.add(T);
-			return T;
+			const o = [...this.availablePool][0];
+			this.availablePool.delete(o);
+			this.inUsePool.add(o);
+			return o;
 		}
 		else
 		{
