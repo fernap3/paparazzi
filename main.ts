@@ -3,7 +3,8 @@ dotenv.config();
 
 import * as express from "express";
 import * as bodyParser from "body-parser";
-import * as rasterizerPool from "./rasterizer-pool";
+import Rasterizer from "./rasterizer";
+import RasterizerPool from "./rasterizer-pool";
 
 // Let the process crash on unhandled promises
 process.on("unhandledRejection", err => { throw err; });
@@ -17,12 +18,20 @@ process.on("SIGTERM", async (errCode) => {
 if (!checkForEnvVars("PORT", "POOL_SIZE"))
 	process.exit(-1);
 
+const pool = new RasterizerPool<Rasterizer>();
+
 startServer();
 
 async function startServer()
 {
 	console.log("Starting puppeteer pool");
-	await rasterizerPool.init(process.env.POOL_SIZE);
+
+	for (let i = 0; i < parseInt(process.env.POOL_SIZE); i++)
+	{
+		const r = new Rasterizer();
+		await r.init();
+		pool.add(r);
+	}
 	
 	const app = express();
 	
@@ -46,13 +55,13 @@ async function startServer()
 			return;
 		}
 
-		const r = await rasterizerPool.reserve();
+		const r = await pool.reserve();
 
 		try {
 			await r.setHtml(html);
 		}
 		finally	{
-			rasterizerPool.release(r);
+			pool.release(r);
 		}
 
 		res.status(200).send();
@@ -73,13 +82,13 @@ async function startServer()
 			return;
 		}
 
-		const r = await rasterizerPool.reserve();
+		const r = await pool.reserve();
 		let imageBuffer: Buffer;
 		try {
 			imageBuffer = await r.screenshot(updateFunction, updateData, height, width);
 		}
 		finally	{
-			rasterizerPool.release(r);
+			pool.release(r);
 		}
 
 		res.writeHead(200, {

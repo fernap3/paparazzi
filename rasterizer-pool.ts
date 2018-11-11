@@ -1,64 +1,66 @@
-import Rasterizer from "./rasterizer";
-
-const availablePool = new Set<Rasterizer>();
-const inUsePool = new Set<Rasterizer>();
-const waiters = [] as ((value: Rasterizer) => void)[];
-
-export async function reserve(): Promise<Rasterizer>
+export default class Pool<T>
 {
-	if (availablePool.size)
+	private availablePool = new Set<T>();
+	private inUsePool = new Set<T>();
+	private waiters = [] as ((value: T) => void)[];
+
+	public async reserve(): Promise<T>
 	{
-		const rasterizer = [...availablePool][0];
-		availablePool.delete(rasterizer);
-		inUsePool.add(rasterizer);
-		return rasterizer;
-	}
-	else
-	{
-		let r;
-		const p = new Promise<Rasterizer>((resolve, reject) =>
+		if (this.availablePool.size)
 		{
-			r = resolve;
-		});
+			const T = [...this.availablePool][0];
+			this.availablePool.delete(T);
+			this.inUsePool.add(T);
+			return T;
+		}
+		else
+		{
+			let r;
+			const p = new Promise<T>((resolve, reject) =>
+			{
+				r = resolve;
+			});
 
-		waiters.push(r);
-		return p;
+			this.waiters.push(r);
+			return p;
+		}
 	}
-}
 
-export function release(r: Rasterizer): void
-{
-	if (availablePool.has(r))
+	public release(o: T): void
 	{
-		console.log("Warning: releasing Rasterizer that was not already in use");
-		return;
+		if (this.availablePool.has(o))
+		{
+			console.log("Warning: releasing pool object that was not already in use");
+			return;
+		}
+
+		if (!this.inUsePool.has(o))
+			throw "Error: Tried to release pool object that is not owned by the pool";
+
+		if (this.waiters.length)
+		{
+			// If there is already someone waiting in line to grab the next available
+			// pool object, then don't bother returning the object to the pool,
+			// just pass it to the next waiter.
+			const nextWaiter = this.waiters.shift();
+			nextWaiter(o);
+		}
+		else
+		{
+			// No one is waiting for a pool object, return it to the pool
+			this.inUsePool.delete(o);
+			this.availablePool.add(o);
+		}
 	}
 
-	if (!inUsePool.has(r))
-		throw "Error: Tried to release Rasterizer that is not owned by the pool";
-
-	if (waiters.length)
+	public add(o: T): void
 	{
-		// If there is already someone waiting in line to grab the next available
-		// rasterizer, then don't bother returning the rasterizer to the pool,
-		// just pass it to the next waiter.
-		const nextWaiter = waiters.shift();
-		nextWaiter(r);
+		this.availablePool.add(o);
 	}
-	else
+
+	public all(): T[]
 	{
-		// No one is waiting for a rasterizer, return it to the pool
-		inUsePool.delete(r);
-		availablePool.add(r);
+		return [...this.availablePool, ...this.inUsePool];
 	}
 }
 
-export async function init(size: string)
-{
-	return Promise.all([...availablePool].map(r => r.init()));
-}
-
-export async function dispose(r: Rasterizer)
-{
-	return Promise.all([...availablePool, ...inUsePool].map(r => r.dispose()));
-}
