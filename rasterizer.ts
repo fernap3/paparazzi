@@ -16,16 +16,19 @@ export default class Rasterizer
 			throw "This Rasterizer instance has already been initialized";
 		
 		this.browser = await puppeteer.launch({
-			headless: true
+			headless: false
 		});
 
 		this.page = await this.browser.newPage();
 		await this.page.setViewport({width: 800, height: 600});
 	}
 
-	public async setHtml(html: string)
+	public async setHtml(html: string, waitFunction?: string)
 	{
 		await this.page.setContent(html);
+
+		if (waitFunction)
+			await this.page.waitForFunction(waitFunction);
 	}
 
 	public async dispose()

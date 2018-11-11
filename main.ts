@@ -50,6 +50,7 @@ async function startServer()
 	app.post("/html", async (req, res, next) =>
 	{
 		const html = req.body.html;
+		const waitFunction = req.body.waitFunction;
 		
 		if (!html)
 		{
@@ -61,7 +62,7 @@ async function startServer()
 		}
 
 		for (let r of pool.all())
-			await r.setHtml(html);
+			await r.setHtml(html, waitFunction);
 
 		res.status(200).send();
 	});
