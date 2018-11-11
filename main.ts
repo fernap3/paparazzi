@@ -14,7 +14,7 @@ process.on("SIGTERM", async (errCode) => {
 	process.exit(errCode ? errCode as any : 0);
 });
 
-if (!checkForEnvVars("PORT"))
+if (!checkForEnvVars("PORT", "POOL_SIZE"))
 	process.exit(-1);
 
 startServer();
@@ -22,7 +22,7 @@ startServer();
 async function startServer()
 {
 	console.log("Starting puppeteer pool");
-	await rasterizerPool.init();
+	await rasterizerPool.init(process.env.POOL_SIZE);
 	
 	const app = express();
 	
