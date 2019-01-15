@@ -10,8 +10,13 @@ A web service for converting HTML to images
 	
 	
 ## Endpoints
-/html
-POST: Initializes all Puppeteer instances with the given page content
+To initialize all Puppeteer instances with the given page content
 
-/image
-POST: Updates the page content and generates an image
+    POST /html
+    { html: string }
+
+To generate an image
+
+    POST /image
+    { updateFunction: string, updateData: any, height: number, width: number }
+    Updates the page content and generates an image
