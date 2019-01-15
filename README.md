@@ -4,6 +4,7 @@ A web service for converting HTML to images
 ## Running
     git clone https://github.com/fernap3/paparazzi.git
     cd paparazzi
+    npm install
     tsc -p tsconfig.json
     echo -e "PORT=5000\nPOOL_SIZE=2" > .env
     npm start
