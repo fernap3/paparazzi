@@ -4,6 +4,10 @@ export default class Pool<T>
 	private inUsePool = new Set<T>();
 	private waiters = [] as ((value: T) => void)[];
 
+	/**
+	 * Reserves an item for use.  When the returned Promise resolved, the Promise's value will
+	 * be the reserved item and cannot be reserved again until the item is released by calling Pool.release.
+	*/
 	public async reserve(): Promise<T>
 	{
 		if (this.availablePool.size)
@@ -26,6 +30,10 @@ export default class Pool<T>
 		}
 	}
 
+	/**
+	 * Releases a reserved item back to the pool so it can be reserved again.  If the item is not
+	 * already in use, this function does nothing.
+	 */
 	public release(o: T): void
 	{
 		if (this.availablePool.has(o))
@@ -53,11 +61,13 @@ export default class Pool<T>
 		}
 	}
 
+	/** Adds an item to the pool.  The item will immediately be available to reserve using Pool.reserve */
 	public add(o: T): void
 	{
 		this.availablePool.add(o);
 	}
 
+	/** Returns all items in the pool, whether or not they are currently reserved */
 	public all(): T[]
 	{
 		return [...this.availablePool, ...this.inUsePool];
